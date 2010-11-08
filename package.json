@@ -1,0 +1,25 @@
+{
+  "name" : "s3",
+  "description" : "AWS S3 Library",
+  "version" : "0.1.0",
+  "keywords" : [ "node", "s3", "aws"],
+  "homepage" : "http://github.com/koudelka/node-s3",
+  "author" : "Michael Shapiro <koudelka@ryoukai.org>",
+  "contributors" : [],
+  "bugs" : {
+    "mail" : "koudelka@ryoukai.org",
+    "web"  : "http://github.com/koudelka/node-s3/issues"
+  },
+  "licenses" : [ {
+    "type" : "GPL 3",
+    "url"  : "http://www.gnu.org/licenses/gpl-3.0.html",
+  } ],
+
+  "repository" : {
+    "type" : "git",
+    "url"  : "git://github.com/koudelka/node-s3.git"
+  },
+  "engines" : { "node" : ">=0.2.3" },
+  "dependencies" : {},
+  "directories" : { "lib" : "./lib"}
+}

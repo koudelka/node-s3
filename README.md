@@ -21,7 +21,7 @@ Put:
 You can also pass your own headers to put:
     var data_to_upload = {a:'b', c:'d'},
         headers = {
-          x-amz-storage-class: 'REDUCED_REDUNDANCY'
+          'x-amz-storage-class': 'REDUCED_REDUNDANCY'
         }
 
     s3.put({bucket:'my_bucket', key:'some_directory/key', data:data_to_upload, headers:headers}, function(err, result) {

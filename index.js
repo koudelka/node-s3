@@ -19,9 +19,9 @@ var S3 = function(awsAccessKey, awsSecretKey, options){
 //
 // S3 Commands
 //
-fs.readdirSync('./lib/commands').forEach(function(filename) {
+fs.readdirSync(__dirname + '/lib/commands').forEach(function(filename) {
   var command = filename.replace(/.js$/, '')
-  S3.prototype[command] = require('./lib/commands/' + filename)
+  S3.prototype[command] = require(__dirname + '/lib/commands/' + filename)
 })
 
 

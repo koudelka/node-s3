@@ -21,5 +21,6 @@
   },
   "engines" : { "node" : ">=0.2.3" },
   "dependencies" : {},
-  "directories" : { "lib" : "./lib"}
+  "directories" : { "lib" : "./lib"},
+  "main" : "index.js"
 }

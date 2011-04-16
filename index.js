@@ -103,6 +103,7 @@ S3.prototype.requestFactory = function(action, bucket, key, headers, callback) {
       'Host': bucket + "." + this._provider.baseUrl
     }, headers)
   };
+  
   this._addAuthorizationHeader(request, action)
   
   this.connection_pool.request(action, request, callback);

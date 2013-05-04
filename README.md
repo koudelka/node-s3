@@ -1,3 +1,9 @@
+# Unmaintained
+
+I haven't touched this project in a while, I can't guarantee that it works with newer versions of Node. If you submit pull requests, I'll still be happy to test them out and merge them, though.
+
+---
+
 # S3 for Node.js
 
 node-s3 is a (thus far) minimilist library for Amazon's S3 storage system.
@@ -12,13 +18,15 @@ The first thing you'll need is a request manager:
 
 At the moment, the only supported commands are put and get, and are used thusly:
 
-Put:
+####Put:
     var data_to_upload = {a:'b', c:'d'}
     s3.put({bucket:'my_bucket', key:'some_directory/key', data:data_to_upload}, function(err, result) {
       if (!err)
         do_stuff()
     })
+    
 You can also pass your own headers to put:
+
     var data_to_upload = {a:'b', c:'d'},
         headers = {
           'x-amz-storage-class': 'REDUCED_REDUNDANCY'
@@ -29,7 +37,8 @@ You can also pass your own headers to put:
         do_stuff()
     })
 
-Get:
+####Get:
+
     s3.get('my_bucket', 'some_directory/key', function(err, result) {
       if (!err)
         do_stuff(result)

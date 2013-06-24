@@ -1,17 +1,38 @@
-require('underscore')
 var
   fs = require('fs'),
   crypto = require('crypto'),
-  S3ConnectionPool = require('./lib/s3_connection_pool')
+  S3ConnectionPool = require('./lib/s3_connection_pool'),
+  utils = require('./utils.js');
 
-var S3 = function(awsAccessKey, awsSecretKey, options){
-  this._awsSecretKey = awsSecretKey
-  this._awsAccessKey = awsAccessKey
+exports.S3Provider = {
+  baseUrl: 's3.amazonaws.com',
+  authPrefix: 'AWS',
+  isHeader: function(header) {
+    return (/x-amz-/i.test(header));
+  },
+  header : {acl: 'x-amz-acl', storageClass: 'x-amz-storage-class'},
+};
+    
+exports.GSProvider = {
+  baseUrl: 'commondatastorage.googleapis.com',
+  authPrefix: 'GOOG1',
+  isHeader: function(header) {
+    return (/x-goog-/i.test(header));
+  },
+  header : {acl: 'x-goog-acl'},
+};
 
-  options = options || {}
+var S3 = function(awsAccessKey, awsSecretKey, options) {
+  this._awsSecretKey = awsSecretKey;
+  this._awsAccessKey = awsAccessKey;
 
-  this._storageType = options.storageType || 'STANDARD'
-  this._acl = options.acl || 'private'
+  options = options || {};
+  this._provider = exports.S3Provider;
+  if (options.provider) {
+    this._provider = options.provider;
+  }
+  this._storageType = options.storageType || 'STANDARD';
+  this._acl = options.acl || 'private';
 
   this.connection_pool = new S3ConnectionPool()
 }
@@ -39,7 +60,7 @@ S3.prototype._addAuthorizationHeader = function(request, method) {
                      md5 + "\n" +
                      contentType + "\n" + // (optional)
                      date + "\n" +        // only include if no x-amz-date
-                     this._getCanonicalizedAmzHeaders(request.headers) +  // can be blank
+                     this._getCanonicalizedProviderHeaders(request.headers) +  // can be blank
                      resource
 
   var hmac = crypto.createHmac('sha1', awsSecretKey)
@@ -47,15 +68,15 @@ S3.prototype._addAuthorizationHeader = function(request, method) {
                    .digest(encoding = 'base64')
 
   // append the headers to the supplied request object
-  request.headers.Authorization = 'AWS ' + awsAccessKey + ':' + hmac
+  request.headers.Authorization = this._provider.authPrefix + ' ' + awsAccessKey + ':' + hmac
 }
 
-S3.prototype._getCanonicalizedAmzHeaders = function(headers) {
+S3.prototype._getCanonicalizedProviderHeaders = function(headers) {
   var canonicalizedHeaders = []
 
   for (header in headers)
     // pull out amazon headers
-    if (/x-amz-/i.test(header)) {
+    if (this._provider.isHeader(header)) {
       var value = headers[header]
 
       if (value instanceof Array)
@@ -72,14 +93,30 @@ S3.prototype._getCanonicalizedAmzHeaders = function(headers) {
   return result
 }
 
+S3.prototype.requestFactory = function(action, bucket, key, headers, callback) {
+  var request = {
+    manager: this,
+    bucket: bucket,
+    key: key,
+    headers: utils.extend({
+      'Date': new Date().toUTCString(),
+      'Host': bucket + "." + this._provider.baseUrl
+    }, headers)
+  };
+  
+  this._addAuthorizationHeader(request, action)
+  
+  this.connection_pool.request(action, request, callback);
+}
+
 //
 // Modifies the passed request object to include a GET header
 //
 S3.prototype._addGetHeaders = function(request) {
-  request.headers = _({
+  request.headers = utils.extend({
     'Date': new Date().toUTCString(),
-    'Host': request.bucket + '.s3.amazonaws.com'
-  }).extend(request.headers)
+    'Host': request.bucket + "." + this._provider.baseUrl
+  }, request.headers);
 
   this._addAuthorizationHeader(request, 'GET')
 }
@@ -88,20 +125,13 @@ S3.prototype._addGetHeaders = function(request) {
 // Modifies the passed request object to include a PUT header
 //
 S3.prototype._addPutHeaders = function(request){
-  var hash = crypto.createHash('md5').update(request.data).digest(encoding = 'base64')
-
-  request.headers = _({
-    'Host': request.bucket + '.s3.amazonaws.com',
+  request.headers = utils.extend({
+    'Host': request.bucket + '.' + this._provider.baseUrl,
     'Date': new Date().toUTCString(),
-    'Content-Length': request.data.length,
-    'Content-MD5' : hash,
-    'x-amz-acl': request.manager._acl,
-    'x-amz-storage-class': request.manager._storageType
-  })
-  .extend(request.headers)
-
+  }, request.headers);
+  
   this._addAuthorizationHeader(request, 'PUT')
 }
 
 // export the s3 library
-module.exports = S3
+exports.S3 = S3;
